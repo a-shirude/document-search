@@ -1,0 +1,87 @@
+{
+  "info": {
+    "name": "Distributed Document Search",
+    "description": "Sample requests for the DSS prototype. The bearer token is HMAC(tenant_id, AUTH_SECRET). For the default dev secret, tenant-a's token is precomputed below.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "base", "value": "http://localhost:8000"},
+    {"key": "tenant", "value": "tenant-a"},
+    {"key": "token", "value": "REPLACE_WITH_HMAC(tenant-a, dev-secret-change-me)"}
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {"method": "GET", "url": "{{base}}/healthz"}
+    },
+    {
+      "name": "Readiness",
+      "request": {"method": "GET", "url": "{{base}}/readyz"}
+    },
+    {
+      "name": "Index document (async)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "X-Tenant-Id", "value": "{{tenant}}"},
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": "{{base}}/documents",
+        "body": {"mode": "raw", "raw": "{\n  \"title\": \"Distributed systems primer\",\n  \"body\": \"BM25, sharding, routing, and consistency models.\",\n  \"tags\": [\"tech\", \"reference\"]\n}"}
+      }
+    },
+    {
+      "name": "Index document (sync)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "X-Tenant-Id", "value": "{{tenant}}"},
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": {"raw": "{{base}}/documents?sync=true", "host": ["{{base}}"], "path": ["documents"], "query": [{"key": "sync", "value": "true"}]},
+        "body": {"mode": "raw", "raw": "{\n  \"id\": \"hello-1\",\n  \"title\": \"Hello tenant\",\n  \"body\": \"Synchronous index path used in tests.\",\n  \"tags\": [\"demo\"]\n}"}
+      }
+    },
+    {
+      "name": "Search",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "X-Tenant-Id", "value": "{{tenant}}"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {"raw": "{{base}}/search?q=hello&page=1&size=10&fuzzy=true&highlight=true", "host": ["{{base}}"], "path": ["search"], "query": [
+          {"key": "q", "value": "hello"},
+          {"key": "page", "value": "1"},
+          {"key": "size", "value": "10"},
+          {"key": "fuzzy", "value": "true"},
+          {"key": "highlight", "value": "true"}
+        ]}
+      }
+    },
+    {
+      "name": "Get document by id",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "X-Tenant-Id", "value": "{{tenant}}"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": "{{base}}/documents/hello-1"
+      }
+    },
+    {
+      "name": "Delete document",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {"key": "X-Tenant-Id", "value": "{{tenant}}"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": "{{base}}/documents/hello-1"
+      }
+    }
+  ]
+}
